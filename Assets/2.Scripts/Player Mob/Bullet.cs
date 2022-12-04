@@ -19,7 +19,10 @@ public class Bullet : Mob
     // Update is called once per frame
     protected void Update()
     {
-        transform.position += (mokpyo - master.transform.position) * bulletSpeed * Time.deltaTime;
+        if (master == null)
+            destroyBullet();
+        else
+            transform.position += (mokpyo - master.transform.position) * bulletSpeed * Time.deltaTime;
     }
 
     public IEnumerator DeleteTime(float delTime)

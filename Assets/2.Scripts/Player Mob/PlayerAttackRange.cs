@@ -43,8 +43,8 @@ public class PlayerAttackRange : AttackFrame
         {
             worldPosition = ray.GetPoint(distance);
         }
-        float x = Mathf.Clamp(worldPosition.x, Player.transform.position.x - 0.5f, Player.transform.position.x + 0.5f);
-        float z = Mathf.Clamp(worldPosition.z, Player.transform.position.z - 0.5f, Player.transform.position.z + 0.5f);
+        float x = Mathf.Clamp(worldPosition.x, Player.transform.position.x - 1f, Player.transform.position.x + 1f);
+        float z = Mathf.Clamp(worldPosition.z, Player.transform.position.z - 1f, Player.transform.position.z + 1f);
         transform.position = new Vector3(x, transform.position.y, z);
     }
 

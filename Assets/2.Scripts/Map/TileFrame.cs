@@ -8,13 +8,17 @@ public class TileFrame : MonoBehaviour
     public Player player;
     public bool isPlayerIn = false;
     public List<Vector3> tilePos;
+    public int tileRow;
+    public int tileColumn;
+    //player가 올라가있던 시간
+    public float playerOnTime = 0;
 
     // Start is called before the first frame update
     void Start()
     {
         List<Vector3> arr = new List<Vector3>();
-        double[] dX = { -0.5, 0.5, 0.5, -0.5 };
-        double[] dZ = { 0.5, 0.5, -0.5, -0.5 };
+        double[] dX = { -1,1, 1, -1 };
+        double[] dZ = { 1, 1, -1, -1 };
 
         for (int i = 0; i < 4; i++)
         {
@@ -34,6 +38,11 @@ public class TileFrame : MonoBehaviour
             CheckInside(playerCurPos);
         }
 
+        if(isPlayerIn)
+        {
+            playerOnTime += Time.deltaTime;
+        }
+
     }
 
     public void CheckInside(List<Vector3> playerCurPos)
@@ -42,6 +51,7 @@ public class TileFrame : MonoBehaviour
         for(int i = 0; i< 4;i++)
         {
             Vector3 cur = playerCurPos[i];
+
             if(!(tilePos[0].x <= cur.x  && cur.x <= tilePos[1].x  && 
                 tilePos[2].z <= cur.z && cur.z <= tilePos[0].z))
             {

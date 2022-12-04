@@ -60,6 +60,9 @@ MonoBehaviour:
   player: {fileID: 0}
   rigidbody: {fileID: 0}
   goAwayLength: 0
+  agent: {fileID: 0}
+  moveable: 0
+  findTarget: 1
   delTime: 4
   bulletSpeed: 1
   damage: 1

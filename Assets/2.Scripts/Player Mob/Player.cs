@@ -7,6 +7,7 @@ public class Player : Player_Mob_Frame
     public GameObject mapManager;
     public GameObject attackRange;
     public GameObject hitRange;
+    public GameObject playerManager;
     new Rigidbody rigidbody;
     //이동변수
     Vector3 movement;
@@ -121,7 +122,6 @@ public class Player : Player_Mob_Frame
         pos = worldPosition - gameObject.transform.position;
         pos.y = 0;
         Vector3 movement = pos * dashLength;
-        Vector3 ss = Vector3.zero;
 
         transform.Translate(movement, Space.Self);
     }
@@ -173,6 +173,7 @@ public class Player : Player_Mob_Frame
 
     void Respawn()
     {
+        bool respawnPos = false;
         for (int i = stack.Count - 1; i >= 0; i--)
         {
             if (stack[i].Key == 0)
@@ -180,8 +181,16 @@ public class Player : Player_Mob_Frame
                 transform.position = stack[i].Value;
                 goDown = false;
                 hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().isPlayerIn = false;
+                respawnPos = true;
                 break;
             }
+        }
+
+        if(!respawnPos)
+        {
+            playerManager.GetComponent<PlayerManager>().SetPlayerPosition();
+            hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().isPlayerIn = false;
+            goDown = false;
         }
     }
 

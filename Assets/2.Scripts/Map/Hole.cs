@@ -17,10 +17,9 @@ public class Hole : TileFrame
     private void OnTriggerEnter(Collider other)
     {
         GameObject collide = other.gameObject;
-        if (collide.tag == "HitRange")
+        if (collide.tag == "Mob")
         {
-            collide.transform.parent.transform.position = new Vector3(collide.transform.parent.transform.position.x, collide.transform.parent.transform.position.y - 0.5f, collide.transform.parent.transform.position.z);
-            collide.transform.parent.GetComponent<Player_Mob_Frame>().goDown = true;
+            collide.GetComponent<Mob>().Killed();
         }
     }
 }

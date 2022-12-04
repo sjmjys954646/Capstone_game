@@ -1,12 +1,31 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor.AI;
+
 
 public class MapManager : MonoBehaviour
 {
     public GameObject Tile;
     public GameObject Map;
     public GameObject Player;
+    public GameObject playerManager;
+    public GameObject mobGenerator;
+    public GameObject Timer;
+    bool mapMakeFin = false;
+
+    public List<int> mapBreakInterval = new List<int>() { 20, 60, 210 };
+    public List<int> mapBreakPosTime = new List<int>() { 3,5,9 };
+    //초반부 - 중반부 - 후반부가 바뀌는 지점 시간일듯
+    public List<int> whenSectionChange = new List<int>();
+    public int curSection = 0;
+    public bool mapBreak = false;
+    public bool mapBreakStart = false;
+    public int breakNum = 0;
+    bool mapBreakFin = false;
+
+    //테스트용 bake + 유저 이동 + 몹generate 생성 bool
+    public bool RealMode;
 
     //장애물 prefab들
     public List<GameObject> obstacle = new List<GameObject>();
@@ -24,18 +43,89 @@ public class MapManager : MonoBehaviour
 
     public int row = 80;
     public int column = 80;
+
     // Start is called before the first frame update
     void Start()
     {
         mapTile = new GameObject[row, column];
         mapTileInt = new int[row, column];
-        // tileTypeDX를 채워준다.
-        makeTileType();
-        //장애물 생성
-        makeObstacle();
-        makeMap();
 
+        StartCoroutine(mapDelayCharacterMove());
+
+        if(RealMode)
+        {
+            NavMeshBuilder.ClearAllNavMeshes();
+            NavMeshBuilder.BuildNavMesh();
+        }
     }
+
+    private void Update()
+    {
+        if(mapBreak && !mapBreakStart)
+        {
+            mapBreakStart = true;
+            //timeScale 돌려놓고
+            //mapBreak 풀고
+            StartCoroutine(mapBreakCoroutine());
+        }
+    }
+
+    void findWhichToBreakandRemake()
+    {
+        int[,] mapTileIntTmp = mapTileInt;
+        for(int i = 0; i < row ;i++)
+        {
+            mapTileIntTmp[i, 0 + breakNum] = 1;
+            mapTileIntTmp[i, 0 + breakNum + 1] = 1;
+            mapTileIntTmp[i, row - breakNum - 1] = 1;
+            mapTileIntTmp[i, row - breakNum - 2] = 1;
+        }
+
+        for (int i = 0; i < column; i++)
+        {
+            mapTileIntTmp[0 + breakNum, i] = 1;
+            mapTileIntTmp[0 + breakNum + 1, i] = 1;
+            mapTileIntTmp[column - breakNum - 1, i] = 1;
+            mapTileIntTmp[column - breakNum - 1 - 1, i] = 1;
+        }
+
+        for(int i = 0;i<row ;i++)
+        {
+            for(int j = 0;j<column ;j++)
+            {
+                if (mapTileIntTmp[i, j] == 1)
+                    continue;
+
+                if(mapTile[i, j].GetComponent<TileFrame>().playerOnTime >= mapBreakPosTime[curSection])
+                {
+                    mapTileIntTmp[i, j] = 1;
+                }
+            }
+        }
+
+        //맵 재구성
+        for (int i = 0; i < row; i++)
+        {
+            for (int j = 0; j < column; j++)
+            {
+                if (mapTileIntTmp[i, j] == 1 && mapTile[i, j].GetComponent<TileFrame>().index != 1)
+                {
+                    GameObject removeTile = mapTile[i, j];
+                    Destroy(removeTile);
+                    GameObject oneTile;
+                    oneTile = Instantiate(obstacle[1], new Vector3((float)(i * 2 + 1), 0, (float)(j * 2 + 1)), Quaternion.identity);
+                    oneTile.GetComponent<TileFrame>().player = Player.GetComponent<Player>();
+                    oneTile.GetComponent<TileFrame>().tileRow = i;
+                    oneTile.GetComponent<TileFrame>().tileColumn = j;
+                    mapTile[i, j] = oneTile;
+                    oneTile.transform.parent = Map.transform;
+                }
+            }
+        }
+        mapBreakFin = true;
+    }
+
+
     //intmapTile 을 기반으로 mapTile을 만든다.
     void makeMap()
     {
@@ -45,11 +135,15 @@ public class MapManager : MonoBehaviour
             {
                 GameObject oneTile;
                 if (mapTileInt[i, j] == 4)
-                    oneTile = Instantiate(obstacle[mapTileInt[i, j]], new Vector3((float)(i + 0.5), 0.5f, (float)(j + 0.5)), Quaternion.identity);
+                    oneTile = Instantiate(obstacle[mapTileInt[i, j]], new Vector3((float)(i*2 + 1), 1f, (float)(j*2 + 1)), Quaternion.identity);
                 else
-                    oneTile = Instantiate(obstacle[mapTileInt[i, j]], new Vector3((float)(i + 0.5), 0, (float)(j + 0.5)), Quaternion.identity);
+                    oneTile = Instantiate(obstacle[mapTileInt[i, j]], new Vector3((float)(i*2 + 1), 0, (float)(j*2 + 1)), Quaternion.identity);
                 oneTile.GetComponent<TileFrame>().player = Player.GetComponent<Player>();
+                oneTile.GetComponent<TileFrame>().tileRow = i;
+                oneTile.GetComponent<TileFrame>().tileColumn = j;
+                mapTile[i, j] = oneTile;
                 oneTile.transform.parent = Map.transform;
+                
             }
         }
     }
@@ -119,5 +213,38 @@ public class MapManager : MonoBehaviour
         }
 
         return d;
+    }
+
+    void makeMapFull()
+    {
+        // tileTypeDX를 채워준다.
+        makeTileType();
+        //장애물 생성
+        makeObstacle();
+        makeMap();
+        mapMakeFin = true;
+    }
+
+    IEnumerator mapDelayCharacterMove()
+    {
+        makeMapFull();
+        yield return new WaitUntil(() => mapMakeFin);
+        if(RealMode)
+        {
+            playerManager.GetComponent<PlayerManager>().SetPlayerPosition();
+            mobGenerator.GetComponent<MobGenerater>().generateReady = true;
+        }
+    }
+
+    IEnumerator mapBreakCoroutine()
+    {
+        findWhichToBreakandRemake();
+        yield return new WaitUntil(() => mapBreakFin);
+        mapBreak = false;
+        mapBreakFin = false;
+        Time.timeScale = 1f;
+        breakNum += 2;
+        Timer.GetComponent<Timer>().intervalSec = 0;
+        mapBreakStart = false;
     }
 }

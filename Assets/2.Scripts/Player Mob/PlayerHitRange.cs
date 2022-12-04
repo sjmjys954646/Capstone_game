@@ -48,7 +48,7 @@ public class PlayerHitRange : MonoBehaviour
                 collide.transform.parent.transform.GetChild(0).gameObject.GetComponent<AttackRange>().Attacked();
                 damage = collide.transform.parent.GetComponent<Bullet>().damage;
                 Player.GetComponent<Player>().getDamage(damage);
-                //collide.transform.parent.GetComponent<Bullet>().destroyBullet();
+                collide.transform.parent.GetComponent<Bullet>().destroyBullet();
             }
         }
 
@@ -65,8 +65,8 @@ public class PlayerHitRange : MonoBehaviour
         //왼쪽 위 오른쪽 위
         //왼쪽 아래 오른쪽 아래
         List<Vector3> arr = new List<Vector3>();
-        double[] dX = { -0.125, 0.125, 0.125, -0.125 };
-        double[] dZ = { 0.125, 0.125, -0.125, -0.125 };
+        double[] dX = { -0.25, 0.25, 0.25, -0.25 };
+        double[] dZ = { 0.25, 0.25, -0.25, -0.25 };
         Vector3 playerPos = Player.transform.position;
 
         for (int i = 0; i < 4; i++)
