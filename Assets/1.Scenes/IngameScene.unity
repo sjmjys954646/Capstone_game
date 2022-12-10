@@ -588,12 +588,14 @@ MonoBehaviour:
   mapManager: {fileID: 215117029}
   playerManager: {fileID: 838073679}
   gameFinishUI: {fileID: 1541278189}
+  timer: {fileID: 526469824}
   aliveTime: 0
   holeDamage: 0
   swampDamage: 0
   thornDamage: 0
   attackDamage: 0
   bulletDamage: 0
+  finTime: {fileID: 1577230789}
   fintext:
   - {fileID: 895832375}
   - {fileID: 1505054899}

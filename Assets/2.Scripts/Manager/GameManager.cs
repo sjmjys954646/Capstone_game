@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     public MapManager mapManager;
     public PlayerManager playerManager;
     public GameObject gameFinishUI;
+    public GameObject timer;
 
     public float aliveTime = 0;
 
@@ -16,6 +17,8 @@ public class GameManager : MonoBehaviour
     public int thornDamage = 0;
     public int attackDamage = 0;
     public int bulletDamage = 0;
+
+    public TMP_Text finTime;
 
     public List<TMP_Text> fintext;
     
@@ -29,7 +32,7 @@ public class GameManager : MonoBehaviour
             gameFinish = false;
             Time.timeScale = 0f;
             gameFinishUI.SetActive(true);
-
+            finTime.text = timer.GetComponent<Timer>().totalsec.ToString();
             for(int i = 0;i< fintext.Count ;i++)
             {
                 switch(i)
