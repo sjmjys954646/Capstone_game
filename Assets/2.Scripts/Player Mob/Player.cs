@@ -107,7 +107,7 @@ public class Player : Player_Mob_Frame
         rigidbody.MovePosition(transform.position + movement);
     }
 
-    public void getDamage(int damage)
+    public void getDamage(int damage, int reason = 0)
     {
         //Player 公利贸府
         if (!invincible)
@@ -117,6 +117,12 @@ public class Player : Player_Mob_Frame
                 gameManager.GetComponent<GameManager>().swampDamage += 1;
             else
                 gameManager.GetComponent<GameManager>().attackDamage += 1;
+            //reason 1 bullet
+            if(reason == 1)
+            {
+                gameManager.GetComponent<GameManager>().attackDamage -= 1;
+                gameManager.GetComponent<GameManager>().bulletDamage += 1;
+            }
             health -= damage;
             StartCoroutine(damagedCoroutine());
         }

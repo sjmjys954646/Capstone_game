@@ -47,9 +47,7 @@ public class PlayerHitRange : MonoBehaviour
             {
                 collide.transform.parent.transform.GetChild(0).gameObject.GetComponent<AttackRange>().Attacked();
                 damage = collide.transform.parent.GetComponent<Bullet>().damage;
-                Player.GetComponent<Player>().getDamage(damage);
-                Player.GetComponent<Player>().gameManager.GetComponent<GameManager>().attackDamage -= 1;
-                Player.GetComponent<Player>().gameManager.GetComponent<GameManager>().bulletDamage += 1;
+                Player.GetComponent<Player>().getDamage(damage,1);
                 collide.transform.parent.GetComponent<Bullet>().destroyBullet();
             }
         }
