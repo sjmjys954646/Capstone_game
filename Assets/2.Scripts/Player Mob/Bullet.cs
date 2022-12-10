@@ -5,7 +5,7 @@ using UnityEngine;
 public class Bullet : Mob
 {
     public float delTime = 4f;
-    public float bulletSpeed = 0.1f;
+    public float bulletSpeed = 1f;
     public int damage = 1;
     public Vector3 mokpyo;
     public GameObject master;
@@ -22,7 +22,7 @@ public class Bullet : Mob
         if (master == null)
             destroyBullet();
         else
-            transform.position += (mokpyo - master.transform.position) * bulletSpeed * Time.deltaTime;
+            GetComponent<Rigidbody>().AddForce(master.transform.forward * bulletSpeed, ForceMode.Impulse);
     }
 
     public IEnumerator DeleteTime(float delTime)

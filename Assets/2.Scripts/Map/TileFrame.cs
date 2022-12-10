@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class TileFrame : MonoBehaviour
 {
+    public GameObject materialManager;
     public int index;
     public Player player;
     public bool isPlayerIn = false;
@@ -12,6 +13,11 @@ public class TileFrame : MonoBehaviour
     public int tileColumn;
     //player가 올라가있던 시간
     public float playerOnTime = 0;
+    //나는 파괴될 타일인가?
+    public bool amIbreaker = false;
+    public Color myColor;
+    public Material material;
+    public bool amImbreakerCoroutineOn = true;
 
     // Start is called before the first frame update
     void Start()
@@ -26,6 +32,9 @@ public class TileFrame : MonoBehaviour
         }
 
         tilePos = arr;
+
+        material = gameObject.GetComponent<MeshRenderer>().material;
+        myColor = materialManager.GetComponent<MaterialManager>().materials[index].color;
     }
 
     private void OnTriggerStay(Collider other)
@@ -61,4 +70,6 @@ public class TileFrame : MonoBehaviour
 
         isPlayerIn = check;
     }
+
+
 }

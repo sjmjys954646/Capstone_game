@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : Player_Mob_Frame
 {
+    public GameObject gameManager;
     public GameObject mapManager;
     public GameObject attackRange;
     public GameObject hitRange;
@@ -20,8 +22,10 @@ public class Player : Player_Mob_Frame
     public float dashCool;
     [SerializeField]
     bool coroutineCheck = false;
+    bool coroutineCheckThorn = false;
 
-    List<KeyValuePair<int, Vector3>> stack = new List<KeyValuePair<int, Vector3>>();
+    List< KeyValuePair<int,int>> stack = new List<KeyValuePair<int, int>>();
+    public GameObject damaged;
 
     // Start is called before the first frame update
     void Awake()
@@ -54,6 +58,17 @@ public class Player : Player_Mob_Frame
             }
         }
 
+        //풀 대쉬 탈출버그 해결
+        if(!DashPos && mapManager.GetComponent<MapManager>().thornDamagedUI.GetComponent<Image>().color.a != 0)
+        {
+            if(!coroutineCheckThorn)
+            {
+                StartCoroutine(insideCheckThorn());
+                coroutineCheckThorn = true;
+            }
+        }
+
+
         //속도가 이상해졌을때
         if (rigidbody.velocity.x != 0 || rigidbody.velocity.z != 0)
             rigidbody.velocity = Vector3.zero;
@@ -64,10 +79,12 @@ public class Player : Player_Mob_Frame
 
         //구멍에 빠졌을때
         if(goDown)
-            gameObject.transform.position = new Vector3(transform.position.x, transform.position.y - 0.05f, transform.position.z);
+            gameObject.transform.position = new Vector3(transform.position.x, transform.position.y - 0.2f, transform.position.z);
         if(goDown && gameObject.transform.position.y <= -20)
         {
             getDamage(1);
+            gameManager.GetComponent<GameManager>().holeDamage += 1;
+            gameManager.GetComponent<GameManager>().attackDamage -= 1;
             Respawn();
         }
     }
@@ -94,12 +111,22 @@ public class Player : Player_Mob_Frame
     {
         //Player 무적처리
         if (!invincible)
+        {
+            playerManager.GetComponent<PlayerManager>().heart[health - 1].SetActive(false);
+            if(hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().index == 2)
+                gameManager.GetComponent<GameManager>().swampDamage += 1;
+            else
+                gameManager.GetComponent<GameManager>().attackDamage += 1;
             health -= damage;
+            StartCoroutine(damagedCoroutine());
+        }
+
 
         //체력 0 이하시 사망처리
         if (health <= 0)
         {
             Killed();
+            gameManager.GetComponent<GameManager>().gameFinish = true;
         }
         invincible = true;
         StartCoroutine(invincibility(invincibilityTime));
@@ -139,11 +166,17 @@ public class Player : Player_Mob_Frame
         DashPos = true;
     }
 
+    IEnumerator damagedCoroutine()
+    {
+        damaged.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        damaged.SetActive(false);
+    }
     IEnumerator countTime()
     {
         if(hitRange.GetComponent<PlayerHitRange>().curTile != null)
-            stack.Add(new KeyValuePair<int, Vector3>(hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().index,
-                hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().transform.position));
+            stack.Add(new KeyValuePair<int, int>(hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().tileRow,
+                hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().tileColumn));
         if(stack.Count == 10)
         {
             stack.RemoveAt(0);
@@ -171,14 +204,48 @@ public class Player : Player_Mob_Frame
         coroutineCheck = false;
     }
 
+    public IEnumerator insideCheckThorn()
+    {
+        float keepPosTime = 1f;
+        while (keepPosTime > 0.0f)
+        {
+            keepPosTime -= Time.deltaTime;
+            //Debug.Log(hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().index);
+            if (hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().index != 3) // 내 좌표가 가시가 아니면
+            {
+                for (int i = stack.Count - 1; i >= 0; i--)
+                {
+                    int Y = stack[i].Key;
+                    int X = stack[i].Value;
+                    if (mapManager.GetComponent<MapManager>().mapTile[Y, X].GetComponent<TileFrame>().index == 3
+                        && mapManager.GetComponent<MapManager>().mapTile[Y, X].GetComponent<TileFrame>().isPlayerIn)
+                    {
+                        mapManager.GetComponent<MapManager>().mapTile[Y, X].GetComponent<TileFrame>().isPlayerIn = false;
+                    }
+                }
+                mapManager.GetComponent<MapManager>().thornDamagedUI.GetComponent<Image>().color = new Color(
+                    mapManager.GetComponent<MapManager>().thornDamagedUI.GetComponent<Image>().color.r,
+                    mapManager.GetComponent<MapManager>().thornDamagedUI.GetComponent<Image>().color.g,
+                    mapManager.GetComponent<MapManager>().thornDamagedUI.GetComponent<Image>().color.b,
+                    0
+                    );
+                coroutineCheckThorn = false;
+            }
+            yield return new WaitForFixedUpdate();
+        }
+        coroutineCheckThorn = false;
+    }
+
     void Respawn()
     {
         bool respawnPos = false;
         for (int i = stack.Count - 1; i >= 0; i--)
         {
-            if (stack[i].Key == 0)
+            int Y = stack[i].Key;
+            int X = stack[i].Value;
+            if (mapManager.GetComponent<MapManager>().mapTile[Y,X].GetComponent<TileFrame>().index == 0)
             {
-                transform.position = stack[i].Value;
+                transform.position = mapManager.GetComponent<MapManager>().mapTile[Y, X].transform.position;
                 goDown = false;
                 hitRange.GetComponent<PlayerHitRange>().curTile.GetComponent<TileFrame>().isPlayerIn = false;
                 respawnPos = true;

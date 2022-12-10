@@ -7,6 +7,8 @@ public class PlayerManager : MonoBehaviour
     public GameObject mapManager;
     public GameObject player;
     // Start is called before the first frame update
+
+    public List<GameObject> heart;
     
     public void SetPlayerPosition()
     {

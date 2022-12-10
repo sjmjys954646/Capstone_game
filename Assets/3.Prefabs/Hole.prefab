@@ -47,10 +47,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b28a70f9d44db6842b1a5e07c18c09c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  materialManager: {fileID: 0}
   index: 1
   player: {fileID: 0}
   isPlayerIn: 0
   tilePos: []
+  tileRow: 0
+  tileColumn: 0
+  playerOnTime: 0
+  amIbreaker: 0
+  myColor: {r: 0, g: 0, b: 0, a: 1}
+  material: {fileID: 0}
+  amImbreakerCoroutineOn: 1
 --- !u!33 &1508136841699488235
 MeshFilter:
   m_ObjectHideFlags: 0

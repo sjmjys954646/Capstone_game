@@ -12,6 +12,10 @@ public class Hole : TileFrame
             player.GetComponent<Player_Mob_Frame>().goDown = true;
             player.transform.position = new Vector3(player.transform.position.x, player.transform.position.y - 1.5f, player.transform.position.z);
         }
+
+
+        if(!amIbreaker)
+            material.color = myColor;
     }
 
     private void OnTriggerEnter(Collider other)

@@ -42,11 +42,6 @@ public class Mob : Player_Mob_Frame
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.tag == "Mob")
-            return;
-    }
 
     public void Attacked()
     {

@@ -1,11 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor.AI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 
 public class MapManager : MonoBehaviour
 {
+    public GameObject gameManager;
+    public GameObject materialManager;
     public GameObject Tile;
     public GameObject Map;
     public GameObject Player;
@@ -16,30 +20,34 @@ public class MapManager : MonoBehaviour
 
     public List<int> mapBreakInterval = new List<int>() { 20, 60, 210 };
     public List<int> mapBreakPosTime = new List<int>() { 3,5,9 };
-    //ÃÊ¹ÝºÎ - Áß¹ÝºÎ - ÈÄ¹ÝºÎ°¡ ¹Ù²î´Â ÁöÁ¡ ½Ã°£ÀÏµí
+    //ï¿½Ê¹Ýºï¿½ - ï¿½ß¹Ýºï¿½ - ï¿½Ä¹ÝºÎ°ï¿½ ï¿½Ù²ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½Ïµï¿½
     public List<int> whenSectionChange = new List<int>();
     public int curSection = 0;
     public bool mapBreak = false;
     public bool mapBreakStart = false;
     public int breakNum = 0;
     bool mapBreakFin = false;
+    public int[,] mapTileIntTmp;
+    public bool findTobreak = false;
 
-    //Å×½ºÆ®¿ë bake + À¯Àú ÀÌµ¿ + ¸÷generate »ý¼º bool
+    //ï¿½×½ï¿½Æ®ï¿½ï¿½ bake + ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ + ï¿½ï¿½generate ï¿½ï¿½ï¿½ï¿½ bool
     public bool RealMode;
 
-    //Àå¾Ö¹° prefabµé
+    //ï¿½ï¿½Ö¹ï¿½ prefabï¿½ï¿½
     public List<GameObject> obstacle = new List<GameObject>();
 
-    //°¢ mapTileÀ» GameObjectÈ­ ÇÏ±â Àü int mapTile
+    //ï¿½ï¿½ mapTileï¿½ï¿½ GameObjectÈ­ ï¿½Ï±ï¿½ ï¿½ï¿½ int mapTile
     public int[,] mapTileInt;
 
-    //°¢ mapTile¿¡ ´ëÇÑ °ü¸®
+    //ï¿½ï¿½ mapTileï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public GameObject[,] mapTile;
 
-    //³×¸ðÇü Å¸ÀÏ ¿¹½Ã
+    //ï¿½×¸ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public int[,] tileNumArr = new int[,]{ { 1, 2 }, { 2, 1 }, { 2, 2 }, { 3, 3 } };
-    //Àå¾Ö¹°À» ¼¼¿ï dx
-    public List<int[,]> tileTypeDX = new List<int[,]>();// ÇöÀç 6°³
+    //ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ dx
+    public List<int[,]> tileTypeDX = new List<int[,]>();// ï¿½ï¿½ï¿½ï¿½ 6ï¿½ï¿½
+
+    public GameObject thornDamagedUI;
 
     public int row = 80;
     public int column = 80;
@@ -54,8 +62,10 @@ public class MapManager : MonoBehaviour
 
         if(RealMode)
         {
-            NavMeshBuilder.ClearAllNavMeshes();
-            NavMeshBuilder.BuildNavMesh();
+            #if UNITY_EDITOR
+            UnityEditor.AI.NavMeshBuilder.ClearAllNavMeshes();
+            UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
+            #endif
         }
     }
 
@@ -64,16 +74,16 @@ public class MapManager : MonoBehaviour
         if(mapBreak && !mapBreakStart)
         {
             mapBreakStart = true;
-            //timeScale µ¹·Á³õ°í
-            //mapBreak Ç®°í
+            //timeScale ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            //mapBreak Ç®ï¿½ï¿½
             StartCoroutine(mapBreakCoroutine());
         }
     }
 
-    void findWhichToBreakandRemake()
+    public void findWhichTobreak()
     {
-        int[,] mapTileIntTmp = mapTileInt;
-        for(int i = 0; i < row ;i++)
+        mapTileIntTmp = mapTileInt;
+        for (int i = 0; i < row; i++)
         {
             mapTileIntTmp[i, 0 + breakNum] = 1;
             mapTileIntTmp[i, 0 + breakNum + 1] = 1;
@@ -89,21 +99,25 @@ public class MapManager : MonoBehaviour
             mapTileIntTmp[column - breakNum - 1 - 1, i] = 1;
         }
 
-        for(int i = 0;i<row ;i++)
+        for (int i = 0; i < row; i++)
         {
-            for(int j = 0;j<column ;j++)
+            for (int j = 0; j < column; j++)
             {
                 if (mapTileIntTmp[i, j] == 1)
                     continue;
 
-                if(mapTile[i, j].GetComponent<TileFrame>().playerOnTime >= mapBreakPosTime[curSection])
+                if (mapTile[i, j].GetComponent<TileFrame>().playerOnTime >= mapBreakPosTime[curSection])
                 {
                     mapTileIntTmp[i, j] = 1;
                 }
             }
         }
+        findTobreak = true;
+    }
 
-        //¸Ê Àç±¸¼º
+    void findWhichToBreakandRemake()
+    {
+        //ï¿½ï¿½ ï¿½ç±¸ï¿½ï¿½
         for (int i = 0; i < row; i++)
         {
             for (int j = 0; j < column; j++)
@@ -115,8 +129,17 @@ public class MapManager : MonoBehaviour
                     GameObject oneTile;
                     oneTile = Instantiate(obstacle[1], new Vector3((float)(i * 2 + 1), 0, (float)(j * 2 + 1)), Quaternion.identity);
                     oneTile.GetComponent<TileFrame>().player = Player.GetComponent<Player>();
+                    oneTile.GetComponent<TileFrame>().materialManager = materialManager;
                     oneTile.GetComponent<TileFrame>().tileRow = i;
                     oneTile.GetComponent<TileFrame>().tileColumn = j;
+
+                    //ï¿½ï¿½ï¿½Ã´ï¿½ ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
+                    if (oneTile.GetComponent<TileFrame>().index == 3)
+                    {
+                        oneTile.GetComponent<Thorn>().thornDamagedUI = thornDamagedUI;
+                    }
+
+
                     mapTile[i, j] = oneTile;
                     oneTile.transform.parent = Map.transform;
                 }
@@ -126,7 +149,7 @@ public class MapManager : MonoBehaviour
     }
 
 
-    //intmapTile À» ±â¹ÝÀ¸·Î mapTileÀ» ¸¸µç´Ù.
+    //intmapTile ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ mapTileï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½.
     void makeMap()
     {
         for (int i = 0; i < row; i++)
@@ -139,21 +162,27 @@ public class MapManager : MonoBehaviour
                 else
                     oneTile = Instantiate(obstacle[mapTileInt[i, j]], new Vector3((float)(i*2 + 1), 0, (float)(j*2 + 1)), Quaternion.identity);
                 oneTile.GetComponent<TileFrame>().player = Player.GetComponent<Player>();
+                oneTile.GetComponent<TileFrame>().materialManager = materialManager;
                 oneTile.GetComponent<TileFrame>().tileRow = i;
                 oneTile.GetComponent<TileFrame>().tileColumn = j;
+                //ï¿½ï¿½ï¿½Ã´ï¿½ ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
+                if (oneTile.GetComponent<TileFrame>().index == 3)
+                {
+                    oneTile.GetComponent<Thorn>().thornDamagedUI = thornDamagedUI;
+                    oneTile.GetComponent<Thorn>().gameManager = gameManager;
+                }
                 mapTile[i, j] = oneTile;
-                oneTile.transform.parent = Map.transform;
-                
+                oneTile.transform.parent = Map.transform;              
             }
         }
     }
 
-    //Àå¾Ö¹° »ý¼º
+    //ï¿½ï¿½Ö¹ï¿½ ï¿½ï¿½ï¿½ï¿½
     void makeObstacle()
     {
-        //ÀüÃ¼ ±¸¿ªÀ» 4*4·Î ³ª´²¼­ ¿ÞÂÊ À§ ±âÁØ 3*3 Áß ÇØ´çºÎºÐÀÇ ÇÑ ÁöÁ¡À» ¼±ÅÃ
-        //ÀÌ ÁöÁ¡À» ±âÁØÀ¸·Î Àå¾Ö¹°À» ¼³Ä¡ ÇÒ ¼ö ÀÖ´Â°¡ ÆÇ´Ü
-        //ºÒ°¡´É ÇÒ½Ã °¡´ÉÇÑ°÷ ±îÁö ¼³Ä¡
+        //ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 4*4ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ 3*3 ï¿½ï¿½ ï¿½Ø´ï¿½Îºï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        //ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö´Â°ï¿½ ï¿½Ç´ï¿½
+        //ï¿½Ò°ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
         for(int i = 0;i<row/4 ;i++)
         {
             for(int j = 0;j <column/4 ;j++)
@@ -187,12 +216,12 @@ public class MapManager : MonoBehaviour
 
     void makeTileType()
     {
-        //³×¸ðÅ¸ÀÏµé 1,2 2,1 2,2 3,3
+        //ï¿½×¸ï¿½Å¸ï¿½Ïµï¿½ 1,2 2,1 2,2 3,3
         for(int i = 0;i<4 ;i++)
         {
             tileTypeDX.Add(putTyle(tileNumArr[i,0] , tileNumArr[i,1]));
         }
-        // ¤¡ÀÚ ¤¤ ÀÚ ½Ãµµ
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½Ãµï¿½
         int[,] p = putTyle(1, 2);
         p[1, 1] = 1;
         tileTypeDX.Add(p);
@@ -217,9 +246,9 @@ public class MapManager : MonoBehaviour
 
     void makeMapFull()
     {
-        // tileTypeDX¸¦ Ã¤¿öÁØ´Ù.
+        // tileTypeDXï¿½ï¿½ Ã¤ï¿½ï¿½ï¿½Ø´ï¿½.
         makeTileType();
-        //Àå¾Ö¹° »ý¼º
+        //ï¿½ï¿½Ö¹ï¿½ ï¿½ï¿½ï¿½ï¿½
         makeObstacle();
         makeMap();
         mapMakeFin = true;
@@ -229,9 +258,9 @@ public class MapManager : MonoBehaviour
     {
         makeMapFull();
         yield return new WaitUntil(() => mapMakeFin);
-        if(RealMode)
+        playerManager.GetComponent<PlayerManager>().SetPlayerPosition();
+        if (RealMode)
         {
-            playerManager.GetComponent<PlayerManager>().SetPlayerPosition();
             mobGenerator.GetComponent<MobGenerater>().generateReady = true;
         }
     }
@@ -245,6 +274,7 @@ public class MapManager : MonoBehaviour
         Time.timeScale = 1f;
         breakNum += 2;
         Timer.GetComponent<Timer>().intervalSec = 0;
+        Timer.GetComponent<Timer>().findMapBreakFin = true;
         mapBreakStart = false;
     }
 }

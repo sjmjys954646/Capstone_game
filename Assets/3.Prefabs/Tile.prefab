@@ -51,6 +51,10 @@ MonoBehaviour:
   player: {fileID: 0}
   isPlayerIn: 0
   tilePos: []
+  tileRow: 0
+  tileColumn: 0
+  playerOnTime: 0
+  amIbreaker: 0
 --- !u!33 &3110138233008994485
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -79,7 +83,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 194a3e4f0bf2ff24087fdeef4711d368, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
